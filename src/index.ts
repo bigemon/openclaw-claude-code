@@ -439,7 +439,6 @@ program
         process.exit(1);
       }
     }
-
     if (options.enableAutoMode) {
       body.enableAutoMode = true;
     }

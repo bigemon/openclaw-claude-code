@@ -4,13 +4,8 @@ Control Claude Code via MCP (Model Context Protocol). This CLI provides **agent-
 
 Built for [OpenClaw](https://github.com/openclaw/openclaw) agents that need to drive Claude Code as a coding backend.
 
-## What's New in v1.3 🚀
+## What's New in v1.2 🚀
 
-- **Auto Mode** — `--permission-mode auto` + `--enable-auto-mode` — classifier-based safety checks that auto-approve safe actions and block dangerous ones (requires Sonnet/Opus 4.6)
-- **Session Name** — `-n` / `--session-name` for human-readable session identification
-- **Permission Mode Update** — `auto` added to permission modes, model references updated to Claude Opus 4.6
-
-### v1.2
 - **Cost Tracking** — `session-cost` with full token/price breakdown (Claude, Gemini, GPT pricing)
 - **Session Branching** — `session-branch` to fork + change model/effort in one step
 - **Hooks System** — `session-hooks` with webhook callbacks for tool errors, context high, stop events
@@ -32,7 +27,6 @@ Built for [OpenClaw](https://github.com/openclaw/openclaw) agents that need to d
 
 - 🔌 **MCP Protocol** — Direct access to all Claude Code tools
 - 💾 **Persistent Sessions** — Maintain context across multiple interactions
-- 🛡️ **Auto Mode** — Classifier-based safety checks, best of both worlds between manual approval and skip-all
 - 🧠 **Effort Control** — low/medium/high/max effort levels + ultrathink
 - 📋 **Plan Mode** — Claude creates a plan before executing
 - 🔄 **Context Management** — Compact sessions, inspect token usage
@@ -44,26 +38,9 @@ Built for [OpenClaw](https://github.com/openclaw/openclaw) agents that need to d
 
 ## Installation
 
-This repo has two parts: the **CLI skill** (this directory) and the **backend server** (`backend/`).
-
-### 1. Start the backend
-
-The backend wraps the Claude Code CLI into an HTTP API that the skill talks to.
-
 ```bash
-cd backend
-npm install
-npm run build
-export ANTHROPIC_API_KEY="sk-ant-..."
-./start.sh --daemon   # runs on http://127.0.0.1:18795
-```
-
-See [`backend/README.md`](backend/README.md) for full backend docs.
-
-### 2. Install the CLI skill
-
-```bash
-# From repo root
+git clone https://github.com/Enderfga/openclaw-claude-code-skill.git
+cd openclaw-claude-code-skill
 npm install
 npm run build
 npm link  # optional: make CLI globally available
@@ -72,8 +49,8 @@ npm link  # optional: make CLI globally available
 ## Requirements
 
 - Node.js 18+
-- [Claude Code CLI](https://github.com/anthropics/claude-code) installed (`claude` on `$PATH`)
-- Backend server running (see above)
+- Backend API server running (see Configuration)
+- Claude Code CLI installed
 
 ## Configuration
 
@@ -85,12 +62,7 @@ export BACKEND_API_URL="http://your-server:port"
 ## Quick Start
 
 ```bash
-# Start a session with auto mode (recommended for agents)
-claude-code-skill session-start myproject -d ~/project \
-  --permission-mode auto --enable-auto-mode \
-  --allowed-tools "Bash,Read,Edit,Write,Glob,Grep"
-
-# Or with high effort
+# Start a session with high effort
 claude-code-skill session-start myproject -d ~/project \
   --permission-mode acceptEdits \
   --allowed-tools "Bash,Read,Edit,Write,Glob,Grep" \
@@ -153,18 +125,8 @@ claude-code-skill session-start myproject -d ~/project
 
 # With effort and model
 claude-code-skill session-start myproject -d ~/project \
-  --model claude-opus-4-6 \
+  --model claude-opus-4-5 \
   --effort high
-
-# Auto mode — classifier approves safe actions, blocks dangerous ones
-claude-code-skill session-start myproject -d ~/project \
-  --permission-mode auto --enable-auto-mode \
-  --allowed-tools "Bash,Read,Edit,Write,Glob,Grep" \
-  --max-budget 3.00
-
-# Named session for easy identification
-claude-code-skill session-start myproject -d ~/project \
-  -n "Auth Refactor" --permission-mode plan
 
 # With proxy (multi-model support)
 claude-code-skill session-start gemini-dev -d ~/project \
@@ -268,7 +230,6 @@ claude-code-skill resume <session-id> "Continue" -d ~/project
 | Mode | Description |
 |------|-------------|
 | `acceptEdits` | Auto-accept file edits (default) |
-| `auto` | Classifier-based safety checks, auto-approve safe actions (requires `--enable-auto-mode`) |
 | `plan` | Preview changes before applying |
 | `default` | Ask for each operation |
 | `bypassPermissions` | Skip all prompts (dangerous!) |
@@ -441,12 +402,6 @@ With `--stream --ndjson`, each line is a JSON object:
 - [x] Auto-resume stopped sessions (`--auto-resume`)
 - [x] NDJSON streaming output
 - [x] Configurable API timeouts with AbortController
-
-### ✅ Completed (v1.3)
-- [x] Auto Mode (`--permission-mode auto` + `--enable-auto-mode`) — classifier-based safety checks
-- [x] Session naming (`-n` / `--session-name`) for human-readable identification
-- [x] Permission mode update — `auto` added to supported modes
-- [x] Model references updated to Claude Opus 4.6
 
 ### ✅ Completed (v1.2)
 - [x] Session cost tracking with full breakdown (`session-cost`)
