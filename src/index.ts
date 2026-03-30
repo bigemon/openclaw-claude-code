@@ -8,6 +8,7 @@
 import { SessionManager } from './session-manager.js';
 import { registerPromptBypass } from './hooks/prompt-bypass.js';
 import { createProxyHandler } from './proxy/handler.js';
+import { EmbeddedServer } from './embedded-server.js';
 import type { PluginConfig, EffortLevel } from './types.js';
 
 // ─── Standalone Export ───────────────────────────────────────────────────────
@@ -44,8 +45,15 @@ export function definePluginEntry(api: PluginAPI): void {
   const rawConfig = api.getConfig() as Partial<PluginConfig>;
   const manager = new SessionManager(rawConfig);
 
+  // Start embedded HTTP server for CLI access
+  const server = new EmbeddedServer(manager);
+  server.start().catch(err => console.error('[plugin] Embedded server failed:', err));
+
   // Graceful shutdown
-  api.onShutdown(async () => manager.shutdown());
+  api.onShutdown(async () => {
+    await server.stop();
+    await manager.shutdown();
+  });
 
   // Register hooks
   registerPromptBypass(api);
